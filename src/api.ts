@@ -5,6 +5,7 @@ import { callGoogleStream, extractPromptFromGeminiBody } from "./providers/googl
 import { callOpenAIStream } from "./providers/openai.ts";
 import { callAnthropicStream } from "./providers/anthropic.ts";
 import { callOllamaSearch } from "./providers/ollama.ts";
+import { callAntigravityGrounding } from "./providers/antigravity.ts";
 import type { StreamResult } from "./providers/types.ts";
 
 export { getProviderKind, getConfig } from "./providers/config.ts";
@@ -30,6 +31,18 @@ export async function callApiStream(
         throw new Error("No prompt text found in request body");
     }
 
+    if (kind === "antigravity") {
+        return callAntigravityGrounding({
+            ctx,
+            model,
+            prompt,
+            mode: "search",
+            urls,
+            signal,
+            onUpdate
+        });
+    }
+
     // Ollama search is a standalone REST call, not a model tool — the prompt
     // carries the embedded URL list only for other providers, so strip it here.
     if (kind === "ollama") {
@@ -39,7 +52,7 @@ export async function callApiStream(
     if (kind === "openai" || kind === "xai") {
         return callOpenAIStream(ctx, model, prompt, onUpdate, signal, thinkingLevel);
     }
-    if (kind === "anthropic") {
+    if (kind === "anthropic" || kind === "deepseek") {
         return callAnthropicStream(ctx, model, prompt, onUpdate, signal);
     }
 

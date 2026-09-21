@@ -4,6 +4,7 @@ import { Type, type Static } from "typebox";
 import { callApiStream, getConfig } from "./api.ts";
 import { formatWebSearchResult } from "./format.ts";
 import { getWebSearchModel, missingWebSearchConfigResult, errorResult } from "./utils.ts";
+import { isExaConfigured, searchExa } from "./providers/exa.ts";
 
 export const WebSearchSchema = Type.Object({
     query: Type.String({ description: "The search query or question to answer" }),
@@ -23,7 +24,21 @@ export async function webSearch(
     thinkingLevel?: ModelThinkingLevel
 ) {
     const model = await getWebSearchModel(ctx);
-    if (!model) return missingWebSearchConfigResult(ctx);
+    if (!model) {
+        if (isExaConfigured()) {
+            onUpdate?.({
+                content: [{ type: "text", text: `Searching with Exa for "${params.query}"...` }],
+                details: {}
+            });
+            try {
+                const result = await searchExa(params.query, signal);
+                return formatWebSearchResult(result, { modelId: ctx.model?.id || "exa" });
+            } catch (e: any) {
+                return errorResult(e);
+            }
+        }
+        return missingWebSearchConfigResult(ctx);
+    }
 
     const hasUrls = params.urls && params.urls.length > 0;
     const urlCount = hasUrls ? params.urls!.length : 0;

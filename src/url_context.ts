@@ -2,6 +2,7 @@ import type { ExtensionContext, AgentToolUpdateCallback } from "@earendil-works/
 import { Type, type Static } from "typebox";
 import { callApiStream, getConfig } from "./api.ts";
 import { callOllamaUrlContext } from "./providers/ollama.ts";
+import { callAntigravityGrounding } from "./providers/antigravity.ts";
 import { formatResult, formatUrlContextResult } from "./format.ts";
 import { getModel, missingConfigResult, errorResult } from "./utils.ts";
 
@@ -32,18 +33,30 @@ export async function urlContext(
 
     try {
         const config = getConfig(model);
+        if (config.kind === "antigravity") {
+            const result = await callAntigravityGrounding({
+                ctx,
+                model,
+                prompt: params.query,
+                mode: "url_context",
+                urls: params.urls,
+                signal,
+                onUpdate
+            });
+            return formatUrlContextResult(result, { modelId: model.id });
+        }
         if (config.kind === "ollama") {
             const result = await callOllamaUrlContext(ctx, model, params.query, params.urls, signal);
             return formatUrlContextResult(result, { modelId: model.id });
         }
         if (config.kind !== "google") {
             return formatResult(
-                `url_context currently requires a Google Gemini-compatible model. Current model: ${model.id} (${model.provider}/${model.api}).\n\nUse web_search for cross-provider web search, or switch to Gemini for provider-native URL context retrieval.`,
+                `url_context currently requires a Google Gemini-compatible model (Gemini or Antigravity). Current model: ${model.id} (${model.provider}/${model.api}).\n\nUse web_search for cross-provider web search, or switch to Gemini/Antigravity for provider-native URL context retrieval.`,
                 {
                     error: "unsupported_provider",
                     providerKind: config.kind,
                     model: model.id,
-                    supportedProviders: ["google", "google-generative-ai"],
+                    supportedProviders: ["google", "google-generative-ai", "antigravity", "ollama"],
                     grounded: false,
                 }
             );

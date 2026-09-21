@@ -13,7 +13,7 @@ function supportsUrlContext(model: Model<Api> | undefined) {
     const kind = getProviderKind(model);
     // Ollama serves URL retrieval through its web_fetch endpoint instead of
     // Gemini URL Context; the tool dispatch handles both.
-    return kind === "google" || kind === "ollama";
+    return kind === "google" || kind === "ollama" || kind === "antigravity";
 }
 
 function setEquals<T>(a: Set<T>, b: Set<T>) {

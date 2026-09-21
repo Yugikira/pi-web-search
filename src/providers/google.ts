@@ -25,7 +25,7 @@ function isGoogleGroundingRedirect(url: string | undefined): boolean {
     return !!url && /^https:\/\/vertexaisearch\.cloud\.google\.com\/grounding-api-redirect\//.test(url);
 }
 
-async function resolveGoogleGroundingRedirectUrls(searchResults: SearchResultDetail[], citations: SearchResultDetail[], signal?: AbortSignal) {
+export async function resolveGoogleGroundingRedirectUrls(searchResults: SearchResultDetail[], citations: SearchResultDetail[], signal?: AbortSignal) {
     const redirectUrls = [...new Set([...searchResults, ...citations].map((item) => item.url).filter((url): url is string => isGoogleGroundingRedirect(url)))];
     if (redirectUrls.length === 0) return;
 
@@ -50,7 +50,7 @@ async function resolveGoogleGroundingRedirectUrls(searchResults: SearchResultDet
     }
 }
 
-function extractGoogleSearchDetails(groundingMetadata: any): { searchQueries: string[]; searchResults: SearchResultDetail[]; citations: SearchResultDetail[] } {
+export function extractGoogleSearchDetails(groundingMetadata: any): { searchQueries: string[]; searchResults: SearchResultDetail[]; citations: SearchResultDetail[] } {
     const searchQueries = groundingMetadata?.webSearchQueries || [];
     const chunks = groundingMetadata?.groundingChunks || [];
     const supports = groundingMetadata?.groundingSupports || [];

@@ -7,7 +7,10 @@ export type ResolvedAuth =
     | { ok: false; error: string; };
 
 function getEnvAuth(model: Model<Api>): Extract<ResolvedAuth, { ok: true }> | undefined {
-    const apiKey = getEnvApiKey(model.provider);
+    let apiKey = getEnvApiKey(model.provider);
+    if (!apiKey && model.provider === "deepseek") {
+        apiKey = process.env.DEEPSEEK_API_KEY?.trim();
+    }
     return apiKey ? { ok: true, apiKey } : undefined;
 }
 
